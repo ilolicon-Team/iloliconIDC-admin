@@ -3,17 +3,15 @@ image: rust:1.67
 stages:
   - build
   - test
-  - deploy
 
 build:
+  tags:
+    - x86
   script:
     - cargo build --release
 
 test:
+  tags:
+    - x86
   script:
     - cargo test
-
-deploy:
-  script:
-    - cargo deploy
-
