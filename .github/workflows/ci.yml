@@ -1,24 +1,29 @@
-name: Cargo Build & Test
+name: ilolicon_idc
 
 on:
   push:
-  pull_request:
-
-env: 
-  CARGO_TERM_COLOR: always
+    branches:
+      - main
 
 jobs:
-  build_and_test:
-    name: Build and Test
+  build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        toolchain:
-          - stable
-          - beta
-          - nightly
+
     steps:
-      - uses: actions/checkout@v3
-      - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
-      - run: cargo build --verbose
-      - run: cargo test --verbose
+      - uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Build
+        run: cargo build --release
+
+      - name: Test
+        run: cargo test
+
+      - name: Deploy
+        uses: actions/deploy-artifact@v2
+        with:
+          artifact_path: target/release/ilolicon_idc
