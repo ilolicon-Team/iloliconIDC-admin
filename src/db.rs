@@ -27,6 +27,7 @@ pub fn read_only(tables: &str, data: &str, sqlwhere: &str) -> Vec<my::Row> {
     
     let mut conn = pool.get_conn().expect("Failed to get connection from pool");
 
+    // 构建查询语句
     let query = format!("SELECT {} FROM {} WHERE {}", data, tables, sqlwhere);
 
     conn.query_iter(query)
