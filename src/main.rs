@@ -1,8 +1,6 @@
-mod handler;
-mod model;
-mod response;
 mod route;
 mod check;
+mod api;
 mod db;
 
 use axum::http::{
