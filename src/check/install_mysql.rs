@@ -1,33 +1,40 @@
-use dotenv::dotenv;
-use mysql::{OptsBuilder, Pool};
+extern crate dotenv;
+extern crate mysql;
 
-pub fn install_mysql() -> Result<(), mysql::Error> {
-    // 加载 .env 文件
+use std::env;
+use std::fs;
+use dotenv::dotenv;
+use mysql as my;
+use my::prelude::Queryable;
+use ansi_term::Color;
+
+pub fn install_mysql() {
     dotenv().ok();
 
-    // 获取数据库配置
-    let db_host = std::env::var("DATABASE_HOST").unwrap();
-    let db_port = std::env::var("DATABASE_PORT").unwrap();
-    let db_user = std::env::var("DATABASE_USER").unwrap();
-    let db_pass = std::env::var("DATABASE_PASS").unwrap();
-    let db_data = std::env::var("DATABASE_DATA").unwrap();
+    let db_host = env::var("DATABASE_HOST").expect("DATABASE_HOST must be set");
+    let db_port = env::var("DATABASE_PORT").expect("DATABASE_PORT must be set");
+    let db_user = env::var("DATABASE_USER").expect("DATABASE_USER must be set");
+    let db_pass = env::var("DATABASE_PASS").expect("DATABASE_PASS must be set");
+    let db_data = env::var("DATABASE_DATA").expect("DATABASE_DATA must be set");
 
-    // 拼接数据库连接字符串
-    let db_url = format!(
-        "mysql://{}:{}@{}:{}/{}",
-        db_user, db_pass, db_host, db_port, db_data
-    );
+    let opts_builder = my::OptsBuilder::new()
+        .ip_or_hostname(Some(db_host))
+        .tcp_port(db_port.parse::<u16>().expect("Invalid port"))
+        .user(Some(db_user))
+        .pass(Some(db_pass))
+        .db_name(Some(db_data));
 
-    // 建立数据库连接池
-    let mut opts_builder = OptsBuilder::new();
-    opts_builder.url(db_url);
-    let pool = mysql::Pool::new(connection_string).unwrap();
+    let pool = my::Pool::new(opts_builder).expect("Failed to create pool");
+    
+    let mut conn = pool.get_conn().expect("Failed to get connection from pool");
 
-    // 获取数据库连接
-    let mut conn = pool.get_conn()?;
-    let sql_content = std::fs::read_to_string("database/20240301.sql").unwrap();
-    let mut conn = pool.get_conn().unwrap();
+    let sql_content = fs::read_to_string("database/20240301.sql").expect("Failed to read SQL file");
 
-    conn.query_drop(sql_content).unwrap();
-    Ok(conn)
+    for query in sql_content.split(';') {
+        if !query.trim().is_empty() {
+            let query = query.trim();
+            conn.query_drop(query).expect("Failed to execute query");
+        }
+    }
+    println!("{} Installed!", Color::Red.paint("[Install]"));
 }

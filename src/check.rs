@@ -4,6 +4,7 @@ use std::path::Path;
 use ansi_term::Color;
 
 mod install_sqlite3;
+mod install_mysql;
 
 pub fn check_sqlite3() {
     dotenv().ok();
@@ -20,7 +21,9 @@ pub fn check_sqlite3() {
                 }
             }
         }
+    } else if database_base == "mysql" {
+        install_mysql::install_mysql();
     } else {
-        println!("{} 暂时无法自动安装非Sqlite3数据库!", Color::Red.paint("[Failed]"));
+        println!("{} Install Failed!\nUnknown database type", Color::Red.paint("[Install]"));
     }
 }
